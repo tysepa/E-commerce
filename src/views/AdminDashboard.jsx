@@ -200,6 +200,8 @@ export default function AdminDashboard() {
                   <th>Buyer Node Address</th>
                   <th>Items Minted</th>
                   <th>Value</th>
+                  <th>Destination</th>
+                  <th>Timeline</th>
                   <th>Tx Hash</th>
                   <th>Ledger State</th>
                 </tr>
@@ -229,6 +231,12 @@ export default function AdminDashboard() {
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>
                         {Math.round(order.totalEth * 3300 * 1320).toLocaleString()} FRw
                       </div>
+                    </td>
+                    <td style={{ fontSize: '0.85rem', fontWeight: '600' }}>
+                      {order.location || 'Kigali'}
+                    </td>
+                    <td style={{ fontSize: '0.82rem', color: 'var(--accent)', fontWeight: '700' }}>
+                      {order.deliveryTime || '3 Hours'}
                     </td>
                     <td className="hash-text" style={{ fontSize: '0.82rem' }}>
                       <span

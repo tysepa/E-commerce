@@ -14,7 +14,9 @@ function AppContent() {
     setIsAdminMode,
     isAdminAuthenticated,
     setIsLoginModalOpen,
-    logoutAdmin
+    logoutAdmin,
+    smsNotification,
+    setSmsNotification
   } = useWeb3();
 
   return (
@@ -117,6 +119,50 @@ function AppContent() {
           </div>
         </div>
       </footer>
+      {/* Floating SMS Push Notification for Merchant Epa */}
+      {smsNotification && (
+        <div className="sms-push-banner" style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          width: '340px',
+          backgroundColor: '#1f2937',
+          color: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 12px 30px rgba(0,0,0,0.3)',
+          borderLeft: '5px solid #fcca03',
+          padding: '16px',
+          zIndex: '99999',
+          fontFamily: "'Outfit', 'Inter', sans-serif",
+          animation: 'smsSlideIn 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#fcca03', fontWeight: '700' }}>
+              <span>💬 SMS RECEIVED</span>
+              <span>•</span>
+              <span>{smsNotification.timestamp}</span>
+            </div>
+            <button
+              onClick={() => setSmsNotification(null)}
+              style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px', lineHeight: '1' }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#f3f4f6', marginBottom: '6px' }}>
+            To: {smsNotification.phone} (Epa)
+          </div>
+          <p style={{ fontSize: '0.8rem', color: '#d1d5db', lineHeight: '1.4', margin: '0' }}>
+            {smsNotification.message}
+          </p>
+          <style>{`
+            @keyframes smsSlideIn {
+              from { transform: translateX(120%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }

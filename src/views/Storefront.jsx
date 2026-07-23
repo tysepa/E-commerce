@@ -28,6 +28,8 @@ export default function Storefront() {
   const [visibleProducts, setVisibleProducts] = useState(6);
   const [cartPaymentMethod, setCartPaymentMethod] = useState('crypto'); // 'crypto' | 'momo'
   const [clientMomoNumber, setClientMomoNumber] = useState('+250782148861');
+  const [momoSubMethod, setMomoSubMethod] = useState('push'); // 'push' | 'qr'
+  const [shippingLocation, setShippingLocation] = useState('Kigali'); // 'Kigali' | 'Outside Kigali' | 'Outside Rwanda'
   const [converterAmount, setConverterAmount] = useState('100');
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('RWF');
@@ -496,6 +498,30 @@ export default function Storefront() {
                   </div>
                 </div>
 
+                {/* Delivery Location Selector */}
+                <div style={{
+                  marginBottom: '16px',
+                  borderTop: '1px solid var(--border-color)',
+                  paddingTop: '16px'
+                }}>
+                  <div style={{ fontWeight: '700', fontSize: '0.9rem', marginBottom: '8px' }}>
+                    Delivery Destination
+                  </div>
+                  <select
+                    value={shippingLocation}
+                    onChange={(e) => setShippingLocation(e.target.value)}
+                    className="form-control"
+                    style={{ padding: '8px 12px', fontSize: '0.82rem', height: '36px' }}
+                  >
+                    <option value="Kigali">Within Kigali (Delivery: 3 Hours)</option>
+                    <option value="Outside Kigali">Outside Kigali (Delivery: 1 Day)</option>
+                    <option value="Outside Rwanda">Outside Rwanda (Delivery: 2 Weeks)</option>
+                  </select>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: '700', marginTop: '6px' }}>
+                    🚚 Est. Delivery: {shippingLocation === 'Kigali' ? '3 Hours (Kigali Express)' : shippingLocation === 'Outside Kigali' ? '1 Day (Standard Carrier)' : '2 Weeks (International Cargo)'}
+                  </div>
+                </div>
+
                 {/* Payment Method Selector */}
                 <div style={{
                   marginBottom: '16px',
@@ -530,29 +556,128 @@ export default function Storefront() {
                   </div>
 
                   {cartPaymentMethod === 'momo' && (
-                    <div style={{
-                      backgroundColor: 'var(--bg-tertiary)',
-                      padding: '12px',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: '0.82rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px'
-                    }}>
-                      <div>
-                        Merchant MTN Momo Number: <strong style={{ color: 'var(--accent)' }}>+250782148861</strong>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {/* Sub-method Toggles */}
+                      <div style={{ display: 'flex', gap: '8px', backgroundColor: 'var(--bg-tertiary)', padding: '4px', borderRadius: 'var(--radius-sm)' }}>
+                        <button
+                          type="button"
+                          onClick={() => setMomoSubMethod('push')}
+                          style={{
+                            flex: 1,
+                            padding: '6px 8px',
+                            fontSize: '0.78rem',
+                            border: 'none',
+                            backgroundColor: momoSubMethod === 'push' ? '#ffffff' : 'transparent',
+                            color: momoSubMethod === 'push' ? '#111827' : 'var(--text-secondary)',
+                            fontWeight: '700',
+                            borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          USSD Push Request
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMomoSubMethod('qr')}
+                          style={{
+                            flex: 1,
+                            padding: '6px 8px',
+                            fontSize: '0.78rem',
+                            border: 'none',
+                            backgroundColor: momoSubMethod === 'qr' ? '#ffffff' : 'transparent',
+                            color: momoSubMethod === 'qr' ? '#111827' : 'var(--text-secondary)',
+                            fontWeight: '700',
+                            borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Scan QR Code
+                        </button>
                       </div>
-                      <div className="form-group" style={{ margin: '0' }}>
-                        <label className="form-label" style={{ fontSize: '0.78rem' }}>Your Subscriber Phone Number</label>
-                        <input
-                          type="text"
-                          value={clientMomoNumber}
-                          onChange={(e) => setClientMomoNumber(e.target.value)}
-                          placeholder="e.g. +250780000000"
-                          className="form-control"
-                          style={{ padding: '6px 10px', fontSize: '0.82rem' }}
-                        />
-                      </div>
+
+                      {momoSubMethod === 'push' ? (
+                        <div style={{
+                          backgroundColor: 'var(--bg-tertiary)',
+                          padding: '12px',
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.82rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px'
+                        }}>
+                          <div>
+                            Merchant MTN Momo Number: <strong style={{ color: 'var(--accent)' }}>+250782148861</strong>
+                          </div>
+                          <div className="form-group" style={{ margin: '0' }}>
+                            <label className="form-label" style={{ fontSize: '0.78rem' }}>Your Subscriber Phone Number</label>
+                            <input
+                              type="text"
+                              value={clientMomoNumber}
+                              onChange={(e) => setClientMomoNumber(e.target.value)}
+                              placeholder="e.g. +250780000000"
+                              className="form-control"
+                              style={{ padding: '6px 10px', fontSize: '0.82rem' }}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          padding: '16px',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '2px solid #fcca03',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '12px',
+                          textAlign: 'center'
+                        }}>
+                          <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#111827' }}>
+                            MTN MoMo Pay QR Code
+                          </div>
+                          
+                          {/* Vector QR Code with MTN Logo Center */}
+                          <svg width="130" height="130" viewBox="0 0 100 100" style={{ border: '1px solid #e5e7eb', padding: '6px', borderRadius: '6px', backgroundColor: 'white' }}>
+                            <rect x="5" y="5" width="25" height="25" fill="#111827" />
+                            <rect x="9" y="9" width="17" height="17" fill="white" />
+                            <rect x="13" y="13" width="9" height="9" fill="#fcca03" />
+
+                            <rect x="70" y="5" width="25" height="25" fill="#111827" />
+                            <rect x="74" y="9" width="17" height="17" fill="white" />
+                            <rect x="78" y="13" width="9" height="9" fill="#fcca03" />
+
+                            <rect x="5" y="70" width="25" height="25" fill="#111827" />
+                            <rect x="9" y="74" width="17" height="17" fill="white" />
+                            <rect x="13" y="78" width="9" height="9" fill="#fcca03" />
+
+                            <rect x="35" y="5" width="10" height="10" fill="#111827" />
+                            <rect x="50" y="15" width="15" height="5" fill="#111827" />
+                            <rect x="35" y="20" width="5" height="15" fill="#111827" />
+                            <rect x="45" y="25" width="10" height="10" fill="#fcca03" />
+                            
+                            <rect x="75" y="35" width="15" height="5" fill="#111827" />
+                            <rect x="80" y="45" width="10" height="15" fill="#111827" />
+                            <rect x="70" y="65" width="5" height="5" fill="#111827" />
+
+                            <rect x="5" y="35" width="15" height="10" fill="#111827" />
+                            <rect x="25" y="45" width="5" height="15" fill="#111827" />
+                            <rect x="15" y="60" width="10" height="5" fill="#fcca03" />
+
+                            <rect x="35" y="70" width="15" height="5" fill="#111827" />
+                            <rect x="40" y="80" width="20" height="10" fill="#111827" />
+                            <rect x="55" y="65" width="10" height="10" fill="#111827" />
+
+                            {/* Center MTN MoMo badge */}
+                            <rect x="38" y="38" width="24" height="24" rx="4" fill="#fcca03" stroke="#ffffff" strokeWidth="1.5" />
+                            <text x="50" y="50" fill="#000000" fontSize="7" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">momo</text>
+                          </svg>
+
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            Scan to pay merchant: <strong>Epa</strong><br/>
+                            MoMo Number: <strong style={{ color: 'var(--accent)' }}>+250782148861</strong>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -572,7 +697,7 @@ export default function Storefront() {
 
                     <button
                       className="btn btn-primary"
-                      onClick={checkoutWithCrypto}
+                      onClick={() => checkoutWithCrypto(shippingLocation)}
                       disabled={walletConnected && walletBalance < cartTotal}
                       style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
                     >
@@ -580,10 +705,10 @@ export default function Storefront() {
                       <ArrowRight size={16} />
                     </button>
                   </>
-                ) : (
+                ) : momoSubMethod === 'push' ? (
                   <button
                     className="btn btn-primary"
-                    onClick={() => checkoutWithMomo(clientMomoNumber)}
+                    onClick={() => checkoutWithMomo(clientMomoNumber, shippingLocation)}
                     style={{
                       width: '100%',
                       padding: '12px',
@@ -596,6 +721,24 @@ export default function Storefront() {
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fcca03'; }}
                   >
                     <span>Send MTN Momo Pay Request</span>
+                    <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => checkoutWithMomo('+250782148861', shippingLocation)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      justifyContent: 'center',
+                      backgroundColor: '#fcca03',
+                      borderColor: '#fcca03',
+                      color: '#111'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#e0b200'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fcca03'; }}
+                  >
+                    <span>I Have Scanned and Paid</span>
                     <ArrowRight size={16} />
                   </button>
                 )}

@@ -343,6 +343,8 @@ export const Web3Provider = ({ children }) => {
     return localStorage.getItem('km_admin_auth') === 'true';
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [momoTimeouts, setMomoTimeouts] = useState([]);
+  const [smsNotification, setSmsNotification] = useState(null);
   
   // Web3 state
   const [walletConnected, setWalletConnected] = useState(false);
@@ -438,7 +440,7 @@ export const Web3Provider = ({ children }) => {
   };
 
   // Checkout with Mock Blockchain Transaction
-  const checkoutWithCrypto = () => {
+  const checkoutWithCrypto = (location = 'Kigali') => {
     if (!walletConnected) {
       setIsWalletModalOpen(true);
       return;
@@ -448,6 +450,10 @@ export const Web3Provider = ({ children }) => {
     setIsCartOpen(false);
     setIsTxModalOpen(true);
     setTxState('signing');
+
+    let deliveryTime = '3 Hours';
+    if (location === 'Outside Kigali') deliveryTime = '1 Day';
+    else if (location === 'Outside Rwanda') deliveryTime = '2 Weeks';
 
     // Step 1: Request signature (delay 2s)
     setTimeout(() => {
@@ -474,6 +480,8 @@ export const Web3Provider = ({ children }) => {
             items: cart.map(item => `${item.name} (x${item.quantity})`),
             totalEth: parseFloat(totalEth.toFixed(4)),
             txHash: randomHash,
+            location,
+            deliveryTime,
             status: 'Confirmed'
           };
           setOrders(prev => [newOrder, ...prev]);
@@ -546,7 +554,7 @@ export const Web3Provider = ({ children }) => {
     showToast('Admin session terminated.');
   };
 
-  const checkoutWithMomo = (phone) => {
+  const checkoutWithMomo = (phone, location = 'Kigali') => {
     if (cart.length === 0) return;
     setMomoNumber(phone);
     setPaymentMethod('momo');
@@ -554,16 +562,27 @@ export const Web3Provider = ({ children }) => {
     setIsTxModalOpen(true);
     setMomoTxState('push_sent');
 
-    setTimeout(() => {
+    const timeouts = [];
+
+    let deliveryTime = '3 Hours';
+    if (location === 'Outside Kigali') deliveryTime = '1 Day';
+    else if (location === 'Outside Rwanda') deliveryTime = '2 Weeks';
+
+    // Step 1: Initiating request -> Awaiting Handset PIN
+    const t1 = setTimeout(() => {
       setMomoTxState('awaiting_pin');
 
-      setTimeout(() => {
+      // Step 2: Awaiting PIN -> Verifying Network
+      const t2 = setTimeout(() => {
         setMomoTxState('verifying');
 
-        setTimeout(() => {
+        // Step 3: Verifying -> Confirmed
+        const t3 = setTimeout(() => {
           setMomoTxState('confirmed');
 
           const totalEth = cart.reduce((sum, item) => sum + (item.priceEth * item.quantity), 0);
+          const totalUsd = totalEth * 3300;
+          const totalRwf = Math.round(totalUsd * 1320);
           const mockMomoTxId = 'MTN-' + Math.floor(100000000 + Math.random() * 900000000);
           
           const newOrder = {
@@ -573,15 +592,42 @@ export const Web3Provider = ({ children }) => {
             items: cart.map(item => `${item.name} (x${item.quantity})`),
             totalEth: parseFloat(totalEth.toFixed(4)),
             txHash: mockMomoTxId,
+            location,
+            deliveryTime,
             status: 'Confirmed'
           };
           setOrders(prev => [newOrder, ...prev]);
           clearCart();
-        }, 2000);
 
-      }, 3000);
+          // Generate simulated SMS receipt message
+          const smsText = `Y'ello! You have received payment of ${totalRwf.toLocaleString()} FRw from customer ${phone} for Order ${newOrder.id}. TxID: ${mockMomoTxId}. Your mobile money balance is updated.`;
+          setSmsNotification({
+            phone: '+250782148861',
+            message: smsText,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          });
+        }, 2000);
+        timeouts.push(t3);
+
+      }, 5000); // 5 seconds to allow user to simulate decline
+      timeouts.push(t2);
 
     }, 2000);
+    timeouts.push(t1);
+
+    setMomoTimeouts(timeouts);
+  };
+
+  const cancelMomoCheckout = () => {
+    momoTimeouts.forEach(t => clearTimeout(t));
+    setMomoTimeouts([]);
+    setMomoTxState('error');
+    showToast('MTN Momo transaction process not completed.');
+  };
+
+  const cancelCryptoCheckout = () => {
+    setTxState('error');
+    showToast('Crypto checkout transaction process not completed.');
   };
 
   return (
@@ -610,6 +656,10 @@ export const Web3Provider = ({ children }) => {
         momoTxState,
         setMomoTxState,
         checkoutWithMomo,
+        cancelMomoCheckout,
+        cancelCryptoCheckout,
+        smsNotification,
+        setSmsNotification,
         walletConnected,
         walletAddress,
         walletBalance,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWeb3 } from '../context/Web3Context';
-import { X, CheckCircle, Loader2, Copy, ExternalLink, Shield, Smartphone } from 'lucide-react';
+import { X, CheckCircle, Loader2, Copy, ExternalLink, Shield, Smartphone, AlertTriangle } from 'lucide-react';
 
 export default function TransactionModal() {
   const {
@@ -12,8 +12,13 @@ export default function TransactionModal() {
     paymentMethod,
     momoNumber,
     momoTxState,
-    showToast
+    showToast,
+    cancelMomoCheckout,
+    cancelCryptoCheckout,
+    orders
   } = useWeb3();
+
+  const latestOrder = orders.length > 0 ? orders[0] : null;
 
   if (!isTxModalOpen) return null;
 
@@ -93,8 +98,9 @@ export default function TransactionModal() {
   };
 
   const isMomo = paymentMethod === 'momo';
-  const isConfirmed = isMomo ? momoTxState === 'confirmed' : txState === 'confirmed';
   const currentStepState = isMomo ? momoTxState : txState;
+  const isConfirmed = currentStepState === 'confirmed';
+  const isFailed = currentStepState === 'error';
 
   return (
     <div className="modal-backdrop">
@@ -110,7 +116,7 @@ export default function TransactionModal() {
             )}
             <span>{isMomo ? 'MTN MoMo Checkout' : 'Smart Contract Checkout'}</span>
           </h2>
-          {isConfirmed && (
+          {(isConfirmed || isFailed) && (
             <button className="btn-icon" onClick={() => setIsTxModalOpen(false)}>
               <X size={20} />
             </button>
@@ -119,7 +125,43 @@ export default function TransactionModal() {
 
         {/* Body */}
         <div className="modal-body">
-          {!isConfirmed ? (
+          {isFailed ? (
+            /* Failure View */
+            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+              <div style={{
+                color: 'var(--danger)',
+                fontSize: '3.5rem',
+                marginBottom: '16px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#fee2e2',
+                borderRadius: '50%',
+                padding: '16px'
+              }}>
+                <AlertTriangle size={48} strokeWidth={2} />
+              </div>
+              
+              <h3 style={{ fontSize: '1.3rem', marginBottom: '8px', color: 'var(--danger)' }}>
+                {isMomo ? 'MTN MoMo Process Not Done' : 'Transaction Signing Failed'}
+              </h3>
+              
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '24px', lineHeight: '1.5' }}>
+                {isMomo 
+                  ? 'The Mobile Money payment process was not completed. Handset approval timed out or PIN verification was declined by user.'
+                  : 'The blockchain transaction request was rejected by your wallet or gas fees could not be processed.'}
+              </p>
+
+              <button
+                className="btn btn-primary"
+                onClick={() => setIsTxModalOpen(false)}
+                style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
+              >
+                Close and Retry
+              </button>
+            </div>
+          ) : !isConfirmed ? (
+            /* Progress view */
             <div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '20px' }}>
                 {isMomo 
@@ -225,6 +267,19 @@ export default function TransactionModal() {
                   </span>
                 </div>
 
+                {latestOrder && (
+                  <>
+                    <div className="web3-data-row">
+                      <span>Destination</span>
+                      <span style={{ fontWeight: '600' }}>{latestOrder.location}</span>
+                    </div>
+                    <div className="web3-data-row">
+                      <span>Est. Delivery</span>
+                      <span style={{ fontWeight: '700', color: 'var(--accent)' }}>{latestOrder.deliveryTime}</span>
+                    </div>
+                  </>
+                )}
+
                 <div className="web3-data-row">
                   <span>Status</span>
                   <span style={{ color: 'var(--success)', fontWeight: '700' }}>SETTLED</span>
@@ -266,10 +321,31 @@ export default function TransactionModal() {
             >
               Close Receipt
             </button>
+          ) : isFailed ? (
+            null
           ) : (
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="pulse-dot" style={isMomo ? { backgroundColor: '#e0b200' } : {}}></span>
-              <span>{isMomo ? 'Verifying handset settlement...' : 'Mining block...'}</span>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="pulse-dot" style={isMomo ? { backgroundColor: '#e0b200' } : {}}></span>
+                <span>{isMomo ? 'Awaiting PIN entry...' : 'Mining block...'}</span>
+              </div>
+              <button
+                type="button"
+                className="btn"
+                onClick={isMomo ? cancelMomoCheckout : cancelCryptoCheckout}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  backgroundColor: '#fee2e2',
+                  color: 'var(--danger)',
+                  border: '1px solid #fecaca',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Simulate Decline
+              </button>
             </div>
           )}
         </div>
