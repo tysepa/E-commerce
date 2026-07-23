@@ -233,7 +233,12 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td style={{ fontSize: '0.85rem', fontWeight: '600' }}>
-                      {order.location || 'Kigali'}
+                      <div>{order.location || 'Kigali'}</div>
+                      {order.coordinates && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '2px', fontFamily: 'monospace' }}>
+                          {order.coordinates}
+                        </div>
+                      )}
                     </td>
                     <td style={{ fontSize: '0.82rem', color: 'var(--accent)', fontWeight: '700' }}>
                       {order.deliveryTime || '3 Hours'}

@@ -440,7 +440,7 @@ export const Web3Provider = ({ children }) => {
   };
 
   // Checkout with Mock Blockchain Transaction
-  const checkoutWithCrypto = (location = 'Kigali') => {
+  const checkoutWithCrypto = (location = 'Kigali', coordinates = null) => {
     if (!walletConnected) {
       setIsWalletModalOpen(true);
       return;
@@ -482,6 +482,7 @@ export const Web3Provider = ({ children }) => {
             txHash: randomHash,
             location,
             deliveryTime,
+            coordinates,
             status: 'Confirmed'
           };
           setOrders(prev => [newOrder, ...prev]);
@@ -554,7 +555,7 @@ export const Web3Provider = ({ children }) => {
     showToast('Admin session terminated.');
   };
 
-  const checkoutWithMomo = (phone, location = 'Kigali') => {
+  const checkoutWithMomo = (phone, location = 'Kigali', coordinates = null) => {
     if (cart.length === 0) return;
     setMomoNumber(phone);
     setPaymentMethod('momo');
@@ -594,6 +595,7 @@ export const Web3Provider = ({ children }) => {
             txHash: mockMomoTxId,
             location,
             deliveryTime,
+            coordinates,
             status: 'Confirmed'
           };
           setOrders(prev => [newOrder, ...prev]);

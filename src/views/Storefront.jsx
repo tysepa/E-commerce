@@ -31,6 +31,7 @@ export default function Storefront() {
   const [momoSubMethod, setMomoSubMethod] = useState('push'); // 'push' | 'qr'
   const [shippingLocation, setShippingLocation] = useState('Kigali'); // 'Kigali' | 'Outside Kigali' | 'Outside Rwanda'
   const [locationPromptOpen, setLocationPromptOpen] = useState(true);
+  const [deviceCoords, setDeviceCoords] = useState(null);
   const [converterAmount, setConverterAmount] = useState('100');
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('RWF');
@@ -49,6 +50,7 @@ export default function Storefront() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        setDeviceCoords(`Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`);
         setLocationPromptOpen(false);
 
         // Approximate Rwanda limits: Lat between -2.9 and -1.0, Lng between 28.8 and 30.9
@@ -795,7 +797,7 @@ export default function Storefront() {
 
                     <button
                       className="btn btn-primary"
-                      onClick={() => checkoutWithCrypto(shippingLocation)}
+                      onClick={() => checkoutWithCrypto(shippingLocation, deviceCoords)}
                       disabled={walletConnected && walletBalance < cartTotal}
                       style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
                     >
@@ -806,7 +808,7 @@ export default function Storefront() {
                 ) : momoSubMethod === 'push' ? (
                   <button
                     className="btn btn-primary"
-                    onClick={() => checkoutWithMomo(clientMomoNumber, shippingLocation)}
+                    onClick={() => checkoutWithMomo(clientMomoNumber, shippingLocation, deviceCoords)}
                     style={{
                       width: '100%',
                       padding: '12px',
@@ -824,7 +826,7 @@ export default function Storefront() {
                 ) : (
                   <button
                     className="btn btn-primary"
-                    onClick={() => checkoutWithMomo('+250782148861', shippingLocation)}
+                    onClick={() => checkoutWithMomo('+250782148861', shippingLocation, deviceCoords)}
                     style={{
                       width: '100%',
                       padding: '12px',

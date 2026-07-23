@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWeb3 } from '../context/Web3Context';
-import { X, CheckCircle, Loader2, Copy, ExternalLink, Shield, Smartphone, AlertTriangle } from 'lucide-react';
+import { X, CheckCircle, Loader2, Copy, ExternalLink, Shield, Smartphone, AlertTriangle, Download } from 'lucide-react';
 
 export default function TransactionModal() {
   const {
@@ -19,6 +19,44 @@ export default function TransactionModal() {
   } = useWeb3();
 
   const latestOrder = orders.length > 0 ? orders[0] : null;
+
+  const handleDownloadReceipt = (order) => {
+    if (!order) return;
+    const isMomoPayment = order.buyer.includes('Momo');
+    const receiptText = `=============================================
+       EPA & EVA E2 ONLINE SHOP RWANDA
+         "Modern Style A Click Away"
+=============================================
+Order ID: ${order.id}
+Date: ${order.date}
+Channel: ${isMomoPayment ? 'MTN MoMo Rwanda' : 'Rwanda Devnet'}
+Transaction ID: ${order.txHash}
+---------------------------------------------
+Items Purchased:
+${order.items.map(item => `- ${item}`).join('\n')}
+---------------------------------------------
+Payment Summary:
+Total Paid: $${(order.totalEth * 3300).toFixed(2)} USD (~${Math.round(order.totalEth * 3300 * 1320).toLocaleString()} FRw)
+---------------------------------------------
+Delivery Details:
+Destination: ${order.location || 'Kigali'}
+${order.coordinates ? `Coordinates: ${order.coordinates}\n` : ''}Estimated Delivery: ${order.deliveryTime || '3 Hours'}
+=============================================
+Thank you for shopping with Epa & Eva E2!
+For support, contact +250782148861
+=============================================`;
+
+    const blob = new Blob([receiptText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Epa_Eva_E2_Receipt_${order.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Receipt download started!');
+  };
 
   if (!isTxModalOpen) return null;
 
@@ -224,11 +262,34 @@ export default function TransactionModal() {
               <h3 style={{ fontSize: '1.3rem', marginBottom: '8px' }}>
                 {isMomo ? 'MTN MoMo settled successfully!' : 'Payment Minted Successfully!'}
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '24px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '20px' }}>
                 {isMomo 
                   ? 'Fulfillment record registered. MTN Mobile Money network response processed successfully.'
                   : 'Your order is secured under decentralized cryptographic receipt. Fulfillments can be tracked on-chain.'}
               </p>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => handleDownloadReceipt(latestOrder)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  margin: '0 auto 20px auto',
+                  padding: '8px 16px',
+                  fontWeight: '700',
+                  fontSize: '0.85rem',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer'
+                }}
+              >
+                <Download size={16} />
+                <span>Download Official Receipt</span>
+              </button>
 
               {/* Receipt Card */}
               <div className="web3-card" style={{ textAlign: 'left', margin: '0 auto 20px auto' }}>
@@ -273,6 +334,14 @@ export default function TransactionModal() {
                       <span>Destination</span>
                       <span style={{ fontWeight: '600' }}>{latestOrder.location}</span>
                     </div>
+                    {latestOrder.coordinates && (
+                      <div className="web3-data-row">
+                        <span>Coordinates</span>
+                        <span style={{ fontWeight: '600', color: 'var(--accent)', fontSize: '0.8rem' }}>
+                          {latestOrder.coordinates}
+                        </span>
+                      </div>
+                    )}
                     <div className="web3-data-row">
                       <span>Est. Delivery</span>
                       <span style={{ fontWeight: '700', color: 'var(--accent)' }}>{latestOrder.deliveryTime}</span>
