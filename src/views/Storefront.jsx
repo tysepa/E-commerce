@@ -30,6 +30,7 @@ export default function Storefront() {
   const [clientMomoNumber, setClientMomoNumber] = useState('+250782148861');
   const [momoSubMethod, setMomoSubMethod] = useState('push'); // 'push' | 'qr'
   const [shippingLocation, setShippingLocation] = useState('Kigali'); // 'Kigali' | 'Outside Kigali' | 'Outside Rwanda'
+  const [locationPromptOpen, setLocationPromptOpen] = useState(true);
   const [converterAmount, setConverterAmount] = useState('100');
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('RWF');
@@ -37,6 +38,41 @@ export default function Storefront() {
   useEffect(() => {
     setVisibleProducts(6);
   }, [selectedCategory, searchQuery]);
+
+  const requestDeviceLocation = () => {
+    if (!navigator.geolocation) {
+      showToast('⚠️ Geolocation is not supported by your browser.');
+      setLocationPromptOpen(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationPromptOpen(false);
+
+        // Approximate Rwanda limits: Lat between -2.9 and -1.0, Lng between 28.8 and 30.9
+        const isRwanda = latitude > -2.9 && latitude < -1.0 && longitude > 28.8 && longitude < 30.9;
+        // Approximate Kigali limits: Lat between -2.0 and -1.8, Lng between 29.9 and 30.2
+        const isKigali = latitude > -2.0 && latitude < -1.8 && longitude > 29.9 && longitude < 30.2;
+
+        if (isKigali) {
+          setShippingLocation('Kigali');
+          showToast(`📍 Location detected: Kigali (${latitude.toFixed(2)}, ${longitude.toFixed(2)}). 3 Hours delivery enabled!`);
+        } else if (isRwanda) {
+          setShippingLocation('Outside Kigali');
+          showToast(`📍 Location detected: Rwanda Provinces (${latitude.toFixed(2)}, ${longitude.toFixed(2)}). 1 Day delivery enabled!`);
+        } else {
+          setShippingLocation('Outside Rwanda');
+          showToast(`📍 Location detected: International (${latitude.toFixed(2)}, ${longitude.toFixed(2)}). 2 Weeks delivery enabled!`);
+        }
+      },
+      (error) => {
+        setLocationPromptOpen(false);
+        showToast('⚠️ Location access declined. Please set your delivery zone manually in the cart.');
+      }
+    );
+  };
 
   const exchangeRates = {
     USD: 1.0,
@@ -113,6 +149,68 @@ export default function Storefront() {
 
   return (
     <div className="container">
+      {/* Location Auto-Detection Prompt */}
+      {locationPromptOpen && (
+        <div style={{
+          backgroundColor: '#fef3c7',
+          border: '1px solid #fde68a',
+          color: '#92400e',
+          padding: '14px 20px',
+          borderRadius: 'var(--radius-md)',
+          marginTop: '15px',
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '16px',
+          fontSize: '0.88rem',
+          fontFamily: "'Outfit', 'Inter', sans-serif",
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+          animation: 'smsSlideIn 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.25rem' }}>📍</span>
+            <div style={{ textAlign: 'left' }}>
+              <strong style={{ fontWeight: '700' }}>Enable Device Location:</strong> To determine your shipping speed automatically (3 Hours within Kigali, 1 Day national, 2 Weeks international), please share your location.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button
+              onClick={requestDeviceLocation}
+              style={{
+                backgroundColor: '#d97706',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-sm)',
+                fontWeight: '700',
+                cursor: 'pointer',
+                fontSize: '0.8rem'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#b45309'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#d97706'; }}
+            >
+              Share Location
+            </button>
+            <button
+              onClick={() => setLocationPromptOpen(false)}
+              style={{
+                backgroundColor: 'transparent',
+                color: '#92400e',
+                border: '1px solid #f59e0b',
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-sm)',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '0.8rem'
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Banner Section */}
       <section className="hero">
         <div className="hero-grid">
